@@ -14,6 +14,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field, field_validator
 
 from .chunking import Chunk
@@ -79,6 +80,32 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app = FastAPI(title="rag-handbook-qa", version="0.1.0", lifespan=lifespan)
     app.state.rag = state
+
+    @app.get("/", response_class=HTMLResponse, include_in_schema=False)
+    def index():
+        return """<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>rag-handbook-qa</title>
+<style>body{font-family:system-ui,sans-serif;max-width:640px;margin:3rem auto;
+padding:0 1rem;line-height:1.6;color:#1a1a1a}
+code{background:#f2f2f2;padding:.15rem .4rem;border-radius:4px}
+pre{background:#f2f2f2;padding:1rem;border-radius:6px;overflow-x:auto}</style>
+</head><body>
+<h1>rag-handbook-qa</h1>
+<p>RAG Q&amp;A over my Java backend interview-handbook notes
+(220 chunks). Ask a question, get an answer quoted from the notes
+with file/section citations.</p>
+<ul>
+<li><a href="/docs">Interactive API docs</a> (try <code>POST /query</code> there)</li>
+<li><a href="/health">Health check</a></li>
+</ul>
+<h2>Example</h2>
+<pre>curl -X POST /query \\
+  -H 'Content-Type: application/json' \\
+  -d '{"question": "what is a deadlock?"}'</pre>
+<p><a href="https://github.com/BhagyashriT/rag-handbook-qa">Source on GitHub</a></p>
+</body></html>"""
 
     @app.get("/health", response_model=HealthResponse)
     def health():
